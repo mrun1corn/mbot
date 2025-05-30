@@ -101,7 +101,6 @@ module.exports.run = async function({ api, event, args, getText }) {
       // Send the downloaded mp3 file
       await new Promise((resolve, reject) => {
         api.sendMessage({
-          body: getText("sing", "success", title, duration),
           attachment: fs.createReadStream(filePath)
         }, threadID, async (err) => {
           if (err) return reject(err);
