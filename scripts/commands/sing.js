@@ -29,7 +29,7 @@ module.exports.run = async function({ api, event, args, getText }) {
       return api.sendMessage(getText("sing", "missingMusicName"), threadID, messageID);
     }
 
-    // Step 1: Search YouTube using the API
+    // Search YouTube for the music
     const searchUrl = `${YTSEARCH_API_URL}?query=${encodeURIComponent(musicName)}`;
     const searchResponse = await axios.get(searchUrl, { timeout: 10000 });
 
@@ -42,14 +42,14 @@ module.exports.run = async function({ api, event, args, getText }) {
     const title = firstVideo.title;
     const duration = firstVideo.duration;
 
-    // Step 2: Prepare for download
+    // Prepare temporary directory and file
     const tempDir = path.join(__dirname, '..', '..', 'temp');
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
     const fileName = `music_${crypto.randomBytes(6).toString('hex')}.mp3`;
     const filePath = path.join(tempDir, fileName);
 
-    // Step 3: Send progress message
+    // Send initial progress message
     const progressMsgID = await new Promise((resolve, reject) => {
       api.sendMessage(`⬇️ Downloading "${title}"...`, threadID, (err, info) => {
         if (err) return reject(err);
@@ -57,7 +57,7 @@ module.exports.run = async function({ api, event, args, getText }) {
       });
     });
 
-    // Step 4: Start yt-dlp
+    // Spawn yt-dlp to download and extract audio as mp3
     const ytdlp = spawn('yt-dlp', [
       '-x', '--audio-format', 'mp3',
       '-o', filePath,
@@ -86,17 +86,19 @@ module.exports.run = async function({ api, event, args, getText }) {
       }
     });
 
-    // Step 5: Handle completion
     ytdlp.on('close', async (code) => {
       if (code !== 0) {
-        throw new Error(`yt-dlp exited with code ${code}`);
+        return api.sendMessage(getText("sing", "error", `yt-dlp exited with code ${code}`), threadID, messageID);
       }
 
-      // Check the downloaded file
-      const stats = fs.statSync(filePath);
-      if (stats.size === 0) throw new Error("Downloaded MP3 file is empty");
+      try {
+        const stats = fs.statSync(filePath);
+        if (stats.size === 0) throw new Error("Downloaded MP3 file is empty");
+      } catch (err) {
+        return api.sendMessage(getText("sing", "error", err.message), threadID, messageID);
+      }
 
-      // Send audio message
+      // Send the downloaded mp3 file
       await new Promise((resolve, reject) => {
         api.sendMessage({
           body: getText("sing", "success", title, duration),
@@ -104,9 +106,9 @@ module.exports.run = async function({ api, event, args, getText }) {
         }, threadID, async (err) => {
           if (err) return reject(err);
           try {
-            await api.unsendMessage(progressMsgID); // Unsend the progress message
+            await api.unsendMessage(progressMsgID); // Remove progress message
             api.setMessageReaction("🎵", messageID, () => {}, true);
-            fs.unlinkSync(filePath); // Clean up
+            await fs.promises.unlink(filePath); // Delete temp file asynchronously
             resolve();
           } catch (e) {
             reject(e);
