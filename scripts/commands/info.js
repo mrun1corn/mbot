@@ -27,13 +27,10 @@ module.exports.run = async function({ api, event, args, config }) {
 • Bot & Owner Info
 ╰‣ Bot Name: ${config.botName}
 ╰‣ Bot Prefix: ${config.prefix}
-╰‣ Owner: Hridoy
-╰‣ Age: 21
-╰‣ Facebook: https://m.me/hridoy.py
-╰‣ Instagram: @hridoy.py
+╰‣ Owner: Robin
+╰‣ Facebook: https://m.me/mrun1corn
 ╰‣ Date: ${dateStr}
 ╰‣ Time: ${timeStr}
-╰‣ Team: 1dev-hridoy
     `.trim();
 
     api.sendMessage(response, threadID, () => {
