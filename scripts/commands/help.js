@@ -34,7 +34,7 @@ module.exports.run = async function({ api, event, args, config }) {
         msg += `\n╭──── [ ${category.toUpperCase()} ]\n│ ✧${categories[category].commands.sort().join(" ✧ ")}\n╰───────────────◊`;
       });
 
-      msg += `\n\n╭─『 ${config.botName || "NexaloSim"} 』\n╰‣ Total commands: ${commands.size}\n╰‣ Page 1 of 1\n╰‣ A personal Messenger bot ✨\n╰‣ ADMIN: Hridoy`;
+      msg += `\n\n╭─『 ${config.botName || "NexaloSim"} 』\n╰‣ Total commands: ${commands.size}\n╰‣ Page 1 of 1\n╰‣ A personal Messenger bot ✨\n╰‣ ADMIN: Robin`;
 
       api.sendMessage(msg, threadID, messageID);
       console.log(chalk.cyan(`[Help] Full command list requested | ThreadID: ${threadID}`));
